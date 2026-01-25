@@ -40,13 +40,14 @@ public class Application {
         window = Window()
         window.addControl(control)
 
+        node.application = self
+
         window.firstResponder = control.firstSelectableElement
         window.firstResponder?.becomeFirstResponder()
 
         renderer = Renderer(layer: window.layer)
         window.layer.renderer = renderer
 
-        node.application = self
         renderer.application = self
     }
 
