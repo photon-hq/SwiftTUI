@@ -24,6 +24,7 @@ Many features from SwiftUI are already working:
 ✓ `.onAppear()`, `.border()`, `.foregroundColor()`, `.backgroundColor`<br>
 ✓ `.buttonHighlightStyle()` for customizing button focus appearance<br>
 ✓ `.onKeyPress()` for detecting keyboard input<br>
+✓ `onInterrupt` for handling Ctrl+C<br>
 ✓ Modifiers applied to all views in a collection like in SwiftUI
 
 ### Getting started
@@ -49,6 +50,57 @@ swift run
 ```
 
 For more, and to see the supported functionality, check out the [documentation](https://rensbreur.github.io/SwiftTUI/documentation/swifttui/).
+
+### Handling Ctrl+C (Interrupt Signal)
+
+By default, pressing Ctrl+C will quit the application. You can override this behavior using the `onInterrupt` callback:
+
+```swift
+let app = Application(rootView: MyView())
+
+app.onInterrupt = {
+    // Return .quit to exit, or .none to ignore
+    return .none  // Ignore Ctrl+C
+}
+
+app.start()
+```
+
+#### InterruptResult Options
+
+| Result | Description |
+|--------|-------------|
+| `.quit` | Exit the application |
+| `.none` | Ignore the interrupt and continue running |
+
+#### Example: Confirmation Before Quit
+
+```swift
+import SwiftTUI
+
+struct MyView: View {
+    @State var showQuitConfirmation = false
+    
+    var body: some View {
+        VStack {
+            Text("Press Ctrl+C to quit")
+            if showQuitConfirmation {
+                Text("Are you sure? Press 'y' to confirm, 'n' to cancel")
+            }
+        }
+    }
+}
+
+let app = Application(rootView: MyView())
+
+app.onInterrupt = {
+    print("Ctrl+C pressed!")
+    // Add your confirmation logic here
+    return .none  // Don't quit immediately
+}
+
+app.start()
+```
 
 ### Keyboard Input
 

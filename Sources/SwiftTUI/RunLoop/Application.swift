@@ -3,6 +3,14 @@ import Foundation
 import AppKit
 #endif
 
+/// The result of handling an interrupt signal (Ctrl+C)
+public enum InterruptResult {
+    /// Quit the application
+    case quit
+    /// Do nothing, continue running
+    case none
+}
+
 public class Application {
     private let node: Node
     private let window: Window
@@ -15,6 +23,11 @@ public class Application {
 
     private var invalidatedNodes: [Node] = []
     private var updateScheduled = false
+
+    /// Called when the user presses Ctrl+C.
+    /// Return `.quit` to exit the application, or `.none` to ignore the interrupt.
+    /// If not set, the default behavior is to quit immediately.
+    public var onInterrupt: (() -> InterruptResult)?
 
     public init<I: View>(rootView: I, runLoopType: RunLoopType = .dispatch) {
         self.runLoopType = runLoopType
@@ -68,7 +81,7 @@ public class Application {
 
         signal(SIGINT, SIG_IGN)
         let sigIntSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
-        sigIntSource.setEventHandler(qos: .default, flags: [], handler: self.stop)
+        sigIntSource.setEventHandler(qos: .default, flags: [], handler: self.handleInterrupt)
         sigIntSource.resume()
 
         switch runLoopType {
@@ -130,6 +143,22 @@ public class Application {
             } else {
                 window.firstResponder?.handleEvent(char)
             }
+        }
+    }
+
+    private func handleInterrupt() {
+        if let handler = onInterrupt {
+            let result = handler()
+            switch result {
+            case .quit:
+                stop()
+            case .none:
+                // Do nothing, continue running
+                break
+            }
+        } else {
+            // Default behavior: quit
+            stop()
         }
     }
 
