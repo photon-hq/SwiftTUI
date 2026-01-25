@@ -1,17 +1,17 @@
 import Foundation
 
-/// The basic layout object that can be created by a node. Not every node will
-/// create a control (e.g. ForEach won't).
-class Control: LayerDrawing {
-    private(set) var children: [Control] = []
-    private(set) var parent: Control?
-
-    private var index: Int = 0
-
-    var window: Window?
+open class Control: LayerDrawing {
     private(set) lazy var layer: Layer = makeLayer()
 
+    private(set) var children: [Control] = []
+    private(set) weak var parent: Control?
+    private(set) var index: Int = 0
+
+    weak var window: Window?
+
     var root: Control { parent?.root ?? self }
+
+    // MARK: - Hierarchy
 
     func addSubview(_ view: Control, at index: Int) {
         self.children.insert(view, at: index)
@@ -30,17 +30,28 @@ class Control: LayerDrawing {
     }
 
     func removeSubview(at index: Int) {
-        if children[index].isFirstResponder || root.window?.firstResponder?.isDescendant(of: children[index]) == true {
+        let removingFirstResponder = children[index].isFirstResponder || root.window?.firstResponder?.isDescendant(of: children[index]) == true
+        
+        if removingFirstResponder {
             root.window?.firstResponder?.resignFirstResponder()
-            root.window?.firstResponder = selectableElement(above: index) ?? selectableElement(below: index)
-            root.window?.firstResponder?.becomeFirstResponder()
+            // Set to nil first - new views added after this will become first responder
+            root.window?.firstResponder = nil
         }
+        
         children[index].window = nil
         children[index].parent = nil
         self.children.remove(at: index)
         layer.removeLayer(at: index)
         for i in index ..< children.count {
             children[i].index = i
+        }
+        
+        // If we removed the first responder, try to find a new one from remaining children
+        if removingFirstResponder {
+            if let newResponder = selectableElement(above: index) ?? selectableElement(below: index) ?? firstSelectableElement {
+                root.window?.firstResponder = newResponder
+                newResponder.becomeFirstResponder()
+            }
         }
     }
 
@@ -49,49 +60,37 @@ class Control: LayerDrawing {
         return control === parent || parent.isDescendant(of: control)
     }
 
-    func makeLayer() -> Layer {
-        let layer = Layer()
-        layer.content = self
-        return layer
-    }
-
-    // MARK: - Layout
+    // MARK: - Size and layout
 
     func size(proposedSize: Size) -> Size {
-        proposedSize
+        fatalError("Not implemented")
     }
 
     func layout(size: Size) {
         layer.frame.size = size
     }
 
-    func horizontalFlexibility(height: Extended) -> Extended {
-        let minSize = size(proposedSize: Size(width: 0, height: height))
-        let maxSize = size(proposedSize: Size(width: .infinity, height: height))
-        return maxSize.width - minSize.width
+    // MARK: - Layer
+
+    func makeLayer() -> Layer {
+        let layer = Layer()
+        layer.content = self
+        return layer
     }
 
-    func verticalFlexibility(width: Extended) -> Extended {
-        let minSize = size(proposedSize: Size(width: width, height: 0))
-        let maxSize = size(proposedSize: Size(width: width, height: .infinity))
-        return maxSize.height - minSize.height
+    func cell(at position: Position) -> Cell? {
+        nil
     }
 
-    // MARK: - Drawing
-
-    func cell(at position: Position) -> Cell? { nil }
-
-    // MARK: - Event handling
+    // MARK: - Events
 
     func handleEvent(_ char: Character) {
-        for subview in children {
-            subview.handleEvent(char)
+        for child in children {
+            child.handleEvent(char)
         }
     }
 
-    func becomeFirstResponder() {
-        scroll(to: .zero)
-    }
+    func becomeFirstResponder() {}
 
     func resignFirstResponder() {}
 
@@ -109,15 +108,39 @@ class Control: LayerDrawing {
         return nil
     }
 
-    func selectableElement(below index: Int) -> Control? { parent?.selectableElement(below: self.index) }
-    func selectableElement(above index: Int) -> Control? { parent?.selectableElement(above: self.index) }
-    func selectableElement(rightOf index: Int) -> Control? { parent?.selectableElement(rightOf: self.index) }
-    func selectableElement(leftOf index: Int) -> Control? { parent?.selectableElement(leftOf: self.index) }
-
-    // MARK: - Scrolling
-
-    func scroll(to position: Position) {
-        parent?.scroll(to: position + layer.frame.position)
+    final func selectableElement(above index: Int) -> Control? {
+        for i in (0 ..< index).reversed() {
+            if let element = children[i].lastSelectableElement { return element }
+        }
+        return parent?.selectableElement(above: self.index)
     }
 
+    final func selectableElement(below index: Int) -> Control? {
+        for i in (index + 1) ..< children.count {
+            if let element = children[i].firstSelectableElement { return element }
+        }
+        return parent?.selectableElement(below: self.index)
+    }
+
+    final func selectableElement(leftOf index: Int) -> Control? {
+        for i in (0 ..< index).reversed() {
+            if let element = children[i].lastSelectableElement { return element }
+        }
+        return parent?.selectableElement(leftOf: self.index)
+    }
+
+    final func selectableElement(rightOf index: Int) -> Control? {
+        for i in (index + 1) ..< children.count {
+            if let element = children[i].firstSelectableElement { return element }
+        }
+        return parent?.selectableElement(rightOf: self.index)
+    }
+
+    private var lastSelectableElement: Control? {
+        if selectable { return self }
+        for control in children.reversed() {
+            if let element = control.lastSelectableElement { return element }
+        }
+        return nil
+    }
 }

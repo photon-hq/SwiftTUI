@@ -60,6 +60,8 @@ public struct Button<Label: View>: View, PrimitiveView {
         
         // Update highlight style and selected binding if changed
         if let control = node.control as? ButtonControl {
+            control.action = action
+            control.hover = hover
             control.highlightStyle = highlightStyle
             control.buttonLayer?.highlightStyle = highlightStyle
             control.selectedBinding = selected
@@ -80,7 +82,7 @@ public struct Button<Label: View>: View, PrimitiveView {
         
         // Track highlighted state directly since becomeFirstResponder is called
         // before the binding is set up in some cases
-        private var isHighlighted = false
+        var isHighlighted = false
 
         init(action: @escaping () -> Void, hover: @escaping () -> Void, highlightStyle: ButtonHighlightStyle, selectedBinding: Binding<Bool>?) {
             self.action = action
