@@ -22,6 +22,7 @@ Many features from SwiftUI are already working:
 ✓ `Color` with ANSI, xterm and TrueColor support<br>
 ✓ `Text` with bold, italic, underscore and strikethrough variants<br>
 ✓ `.onAppear()`, `.border()`, `.foregroundColor()`, `.backgroundColor`<br>
+✓ `.buttonHighlightStyle()` for customizing button focus appearance<br>
 ✓ Modifiers applied to all views in a collection like in SwiftUI
 
 ### Getting started
@@ -47,6 +48,60 @@ swift run
 ```
 
 For more, and to see the supported functionality, check out the [documentation](https://rensbreur.github.io/SwiftTUI/documentation/swifttui/).
+
+### Button Highlight Styles
+
+SwiftTUI provides customizable button highlight styles. By default, buttons invert their colors when focused. You can customize this behavior using the `.buttonHighlightStyle()` modifier.
+
+#### Available Styles
+
+| Style | Description |
+|-------|-------------|
+| `.inverted` | Default behavior - swaps foreground and background colors |
+| `.textColor(Color)` | Only changes text color when focused (no background change) |
+| `.none` | No visual change when focused |
+
+#### Usage Examples
+
+**Change text color only (no background):**
+```swift
+Button("Click Me") {
+    print("Pressed!")
+}
+.buttonHighlightStyle(.textColor(.cyan))
+```
+
+**No highlight effect:**
+```swift
+Button("Click Me") {
+    print("Pressed!")
+}
+.buttonHighlightStyle(.none)
+```
+
+**Apply to multiple buttons:**
+```swift
+VStack {
+    Button("Button 1") { }
+    Button("Button 2") { }
+    Button("Button 3") { }
+}
+.buttonHighlightStyle(.textColor(.green))
+```
+
+**Different styles for different buttons:**
+```swift
+VStack {
+    Button("Cyan Highlight") { }
+        .buttonHighlightStyle(.textColor(.cyan))
+    
+    Button("No Highlight") { }
+        .buttonHighlightStyle(.none)
+    
+    Button("Default Inverted") { }
+        // Uses default .inverted style
+}
+```
 
 ### Examples
 
