@@ -4,7 +4,6 @@ import Foundation
 /// such as buttons to scroll to.
 public struct ScrollView<Content: View>: View, PrimitiveView {
     let content: VStack<Content>
-    let spacing: Extended?
 
     /// Creates a scroll view with the specified spacing between elements.
     ///
@@ -21,7 +20,6 @@ public struct ScrollView<Content: View>: View, PrimitiveView {
     /// }
     /// ```
     public init(spacing: Extended? = nil, @ViewBuilder _ content: () -> Content) {
-        self.spacing = spacing
         self.content = VStack(content: content(), spacing: spacing)
     }
 
@@ -46,9 +44,7 @@ public struct ScrollView<Content: View>: View, PrimitiveView {
 
         override func layout(size: Size) {
             super.layout(size: size)
-            // Get natural content size - use zero height to get minimum required size
-            // but use actual width for proper text wrapping
-            let contentSize = contentControl.size(proposedSize: Size(width: size.width, height: 0))
+            let contentSize = contentControl.size(proposedSize: .zero)
             contentControl.layout(size: contentSize)
             contentControl.layer.frame.position.line = -contentOffset
         }
