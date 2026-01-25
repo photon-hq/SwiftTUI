@@ -63,6 +63,10 @@ public struct Button<Label: View>: View, PrimitiveView {
             control.highlightStyle = highlightStyle
             control.buttonLayer?.highlightStyle = highlightStyle
             control.selectedBinding = selected
+            
+            // Always sync the binding after update since we have a new binding reference
+            // The binding from PlainButton's @State is recreated each time
+            control.syncSelectedBinding()
         }
     }
 
@@ -73,7 +77,6 @@ public struct Button<Label: View>: View, PrimitiveView {
         weak var buttonLayer: ButtonLayer?
         var highlightStyle: ButtonHighlightStyle
         var selectedBinding: Binding<Bool>?
-        private var hasSyncedInitialState = false
         
         // Track highlighted state directly since becomeFirstResponder is called
         // before the binding is set up in some cases
@@ -93,22 +96,13 @@ public struct Button<Label: View>: View, PrimitiveView {
         override func layout(size: Size) {
             super.layout(size: size)
             self.label.layout(size: size)
-            
-            // Sync initial state after first layout
-            // Use async to avoid modifying state during layout cycle
-            if !hasSyncedInitialState {
-                hasSyncedInitialState = true
-                DispatchQueue.main.async { [weak self] in
-                    self?.syncSelectedBinding()
-                }
-            }
         }
 
         func syncSelectedBinding() {
             // Use our tracked highlighted state which is set by becomeFirstResponder
             let isCurrentlyHighlighted = isHighlighted
             
-            // Update binding to match
+            // Update binding to match current state
             if let binding = selectedBinding, binding.wrappedValue != isCurrentlyHighlighted {
                 binding.wrappedValue = isCurrentlyHighlighted
             }
