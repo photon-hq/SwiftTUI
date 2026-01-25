@@ -184,8 +184,8 @@ public class Application {
 
     func scheduleUpdate() {
         FileHandle.standardError.write("[Application.scheduleUpdate] isUpdating=\(isUpdating) updateScheduled=\(updateScheduled)\n".data(using: .utf8)!)
-        // If we're currently in the middle of an update, schedule another one
-        // because nodes invalidated during update need to be processed
+        // If we're currently in the middle of an update, just mark that another update is needed
+        // The update() method will check this flag at the end and schedule another update if needed
         if isUpdating {
             updateScheduled = true
             return
@@ -200,7 +200,6 @@ public class Application {
 
     private func update() {
         FileHandle.standardError.write("[Application.update] Starting update, invalidatedNodes.count=\(invalidatedNodes.count)\n".data(using: .utf8)!)
-        updateScheduled = false
         isUpdating = true
 
         // Process all invalidated nodes, including any that get added during the update
@@ -218,6 +217,10 @@ public class Application {
         control.layout(size: window.layer.frame.size)
         FileHandle.standardError.write("[Application.update] Calling renderer.update()\n".data(using: .utf8)!)
         renderer.update()
+        
+        // Reset updateScheduled at the END of update, so any scheduleUpdate() calls
+        // that happened during update will properly schedule a new update next time
+        updateScheduled = false
     }
 
     private func handleWindowSizeChange() {
