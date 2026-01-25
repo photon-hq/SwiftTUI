@@ -109,8 +109,11 @@ public class Application {
         let data = FileHandle.standardInput.availableData
 
         guard let string = String(data: data, encoding: .utf8) else {
+            FileHandle.standardError.write("[Application.handleInput] Failed to decode input\n".data(using: .utf8)!)
             return
         }
+
+        FileHandle.standardError.write("[Application.handleInput] Received input: \(string.debugDescription), firstResponder=\(window.firstResponder.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
 
         for char in string {
             if arrowKeyParser.parse(character: char) {
