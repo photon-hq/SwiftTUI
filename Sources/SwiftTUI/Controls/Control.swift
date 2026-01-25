@@ -34,7 +34,6 @@ class Control: LayerDrawing {
         
         if removingFirstResponder {
             root.window?.firstResponder?.resignFirstResponder()
-            // Set to nil first - new views added after this will become first responder
             root.window?.firstResponder = nil
         }
         
@@ -46,11 +45,21 @@ class Control: LayerDrawing {
             children[i].index = i
         }
         
-        // If we removed the first responder, try to find a new one from remaining children
+        // Don't immediately set a new first responder here.
+        // If new views are being added (e.g., during view switching),
+        // addSubview will set the first responder from the new views.
+        // If no new views are added, we need to find one from remaining children.
+        // Use async to defer this check until after any pending addSubview calls.
         if removingFirstResponder {
-            if let newResponder = selectableElement(above: index) ?? selectableElement(below: index) ?? firstSelectableElement {
-                root.window?.firstResponder = newResponder
-                newResponder.becomeFirstResponder()
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                // Only set a new first responder if still nil
+                if self.root.window?.firstResponder == nil {
+                    if let newResponder = self.firstSelectableElement {
+                        self.root.window?.firstResponder = newResponder
+                        newResponder.becomeFirstResponder()
+                    }
+                }
             }
         }
     }
