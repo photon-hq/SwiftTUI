@@ -4,19 +4,36 @@ public struct Button<Label: View>: View, PrimitiveView {
     let label: VStack<Label>
     let hover: () -> Void
     let action: () -> Void
+    let selected: Binding<Bool>?
 
     @Environment(\.buttonHighlightStyle) private var highlightStyle
 
-    public init(action: @escaping () -> Void, hover: @escaping () -> Void = {}, @ViewBuilder label: () -> Label) {
+    /// Creates a button with a custom label.
+    ///
+    /// - Parameters:
+    ///   - selected: A binding to a Boolean value that indicates whether the button is currently focused/selected.
+    ///   - action: The action to perform when the user triggers the button.
+    ///   - hover: An optional action to perform when the button becomes focused.
+    ///   - label: A view builder that creates the button's label.
+    public init(selected: Binding<Bool>? = nil, action: @escaping () -> Void, hover: @escaping () -> Void = {}, @ViewBuilder label: () -> Label) {
         self.label = VStack(content: label())
         self.action = action
         self.hover = hover
+        self.selected = selected
     }
 
-    public init(_ text: String, hover: @escaping () -> Void = {}, action: @escaping () -> Void) where Label == Text {
+    /// Creates a button with a text label.
+    ///
+    /// - Parameters:
+    ///   - text: The text to display on the button.
+    ///   - selected: A binding to a Boolean value that indicates whether the button is currently focused/selected.
+    ///   - hover: An optional action to perform when the button becomes focused.
+    ///   - action: The action to perform when the user triggers the button.
+    public init(_ text: String, selected: Binding<Bool>? = nil, hover: @escaping () -> Void = {}, action: @escaping () -> Void) where Label == Text {
         self.label = VStack(content: Text(text))
         self.action = action
         self.hover = hover
+        self.selected = selected
     }
 
     static var size: Int? { 1 }
@@ -25,7 +42,12 @@ public struct Button<Label: View>: View, PrimitiveView {
         setupEnvironmentProperties(node: node)
         
         node.addNode(at: 0, Node(view: label.view))
-        let control = ButtonControl(action: action, hover: hover, highlightStyle: highlightStyle)
+        let control = ButtonControl(
+            action: action,
+            hover: hover,
+            highlightStyle: highlightStyle,
+            selectedBinding: selected
+        )
         control.label = node.children[0].control(at: 0)
         control.addSubview(control.label, at: 0)
         node.control = control
@@ -36,10 +58,11 @@ public struct Button<Label: View>: View, PrimitiveView {
         node.view = self
         node.children[0].update(using: label.view)
         
-        // Update highlight style if changed
+        // Update highlight style and selected binding if changed
         if let control = node.control as? ButtonControl {
             control.highlightStyle = highlightStyle
             control.buttonLayer?.highlightStyle = highlightStyle
+            control.selectedBinding = selected
         }
     }
 
@@ -49,11 +72,13 @@ public struct Button<Label: View>: View, PrimitiveView {
         var label: Control!
         weak var buttonLayer: ButtonLayer?
         var highlightStyle: ButtonHighlightStyle
+        var selectedBinding: Binding<Bool>?
 
-        init(action: @escaping () -> Void, hover: @escaping () -> Void, highlightStyle: ButtonHighlightStyle) {
+        init(action: @escaping () -> Void, hover: @escaping () -> Void, highlightStyle: ButtonHighlightStyle, selectedBinding: Binding<Bool>?) {
             self.action = action
             self.hover = hover
             self.highlightStyle = highlightStyle
+            self.selectedBinding = selectedBinding
         }
 
         override func size(proposedSize: Size) -> Size {
@@ -76,6 +101,7 @@ public struct Button<Label: View>: View, PrimitiveView {
         override func becomeFirstResponder() {
             super.becomeFirstResponder()
             buttonLayer?.highlighted = true
+            selectedBinding?.wrappedValue = true
             hover()
             layer.invalidate()
         }
@@ -83,6 +109,7 @@ public struct Button<Label: View>: View, PrimitiveView {
         override func resignFirstResponder() {
             super.resignFirstResponder()
             buttonLayer?.highlighted = false
+            selectedBinding?.wrappedValue = false
             layer.invalidate()
         }
 
