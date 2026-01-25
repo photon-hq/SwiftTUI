@@ -109,45 +109,33 @@ public class Application {
         let data = FileHandle.standardInput.availableData
 
         guard let string = String(data: data, encoding: .utf8) else {
-            FileHandle.standardError.write("[Application.handleInput] Failed to decode input\n".data(using: .utf8)!)
             return
         }
-
-        FileHandle.standardError.write("[Application.handleInput] Received input: \(string.debugDescription), firstResponder=\(window.firstResponder.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
 
         for char in string {
             if arrowKeyParser.parse(character: char) {
                 guard let key = arrowKeyParser.arrowKey else { continue }
                 arrowKeyParser.arrowKey = nil
-                FileHandle.standardError.write("[Application.handleInput] Arrow key: \(key), firstResponder: \(window.firstResponder.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
                 if key == .down {
-                    let next = window.firstResponder?.selectableElement(below: 0)
-                    FileHandle.standardError.write("[Application.handleInput] down: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-                    if let next = next {
+                    if let next = window.firstResponder?.selectableElement(below: 0) {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()
                     }
                 } else if key == .up {
-                    let next = window.firstResponder?.selectableElement(above: 0)
-                    FileHandle.standardError.write("[Application.handleInput] up: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-                    if let next = next {
+                    if let next = window.firstResponder?.selectableElement(above: 0) {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()
                     }
                 } else if key == .right {
-                    let next = window.firstResponder?.selectableElement(rightOf: 0)
-                    FileHandle.standardError.write("[Application.handleInput] right: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-                    if let next = next {
+                    if let next = window.firstResponder?.selectableElement(rightOf: 0) {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()
                     }
                 } else if key == .left {
-                    let next = window.firstResponder?.selectableElement(leftOf: 0)
-                    FileHandle.standardError.write("[Application.handleInput] left: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-                    if let next = next {
+                    if let next = window.firstResponder?.selectableElement(leftOf: 0) {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()
@@ -183,7 +171,6 @@ public class Application {
     }
 
     func scheduleUpdate() {
-        FileHandle.standardError.write("[Application.scheduleUpdate] isUpdating=\(isUpdating) updateScheduled=\(updateScheduled)\n".data(using: .utf8)!)
         // If we're currently in the middle of an update, just mark that another update is needed
         // The update() method will check this flag at the end and schedule another update if needed
         if isUpdating {
@@ -192,14 +179,12 @@ public class Application {
         }
         
         if !updateScheduled {
-            FileHandle.standardError.write("[Application.scheduleUpdate] Scheduling async update\n".data(using: .utf8)!)
             DispatchQueue.main.async { self.update() }
             updateScheduled = true
         }
     }
 
     private func update() {
-        FileHandle.standardError.write("[Application.update] Starting update, invalidatedNodes.count=\(invalidatedNodes.count)\n".data(using: .utf8)!)
         isUpdating = true
 
         // Process all invalidated nodes, including any that get added during the update
@@ -215,7 +200,6 @@ public class Application {
         isUpdating = false
 
         control.layout(size: window.layer.frame.size)
-        FileHandle.standardError.write("[Application.update] Calling renderer.update()\n".data(using: .utf8)!)
         renderer.update()
         
         // Reset updateScheduled at the END of update, so any scheduleUpdate() calls

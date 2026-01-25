@@ -14,7 +14,6 @@ class Control: LayerDrawing {
     var root: Control { parent?.root ?? self }
 
     func addSubview(_ view: Control, at index: Int) {
-        FileHandle.standardError.write("[Control.addSubview] self=\(type(of: self)) adding \(type(of: view)) at index=\(index)\n".data(using: .utf8)!)
         self.children.insert(view, at: index)
         layer.addLayer(view.layer, at: index)
         view.parent = self
@@ -24,7 +23,6 @@ class Control: LayerDrawing {
         }
         if let window = root.window, window.firstResponder == nil {
             if let responder = view.firstSelectableElement {
-                FileHandle.standardError.write("[Control.addSubview] Setting firstResponder to \(type(of: responder))\n".data(using: .utf8)!)
                 window.firstResponder = responder
                 responder.becomeFirstResponder()
             }
@@ -32,12 +30,9 @@ class Control: LayerDrawing {
     }
 
     func removeSubview(at index: Int) {
-        FileHandle.standardError.write("[Control.removeSubview] self=\(type(of: self)) removing at index=\(index), child=\(type(of: children[index]))\n".data(using: .utf8)!)
         let removingFirstResponder = children[index].isFirstResponder || root.window?.firstResponder?.isDescendant(of: children[index]) == true
-        FileHandle.standardError.write("[Control.removeSubview] removingFirstResponder=\(removingFirstResponder)\n".data(using: .utf8)!)
         
         if removingFirstResponder {
-            FileHandle.standardError.write("[Control.removeSubview] Clearing firstResponder\n".data(using: .utf8)!)
             root.window?.firstResponder?.resignFirstResponder()
             root.window?.firstResponder = nil
         }
@@ -134,22 +129,10 @@ class Control: LayerDrawing {
         return nil
     }
 
-    func selectableElement(below index: Int) -> Control? {
-        FileHandle.standardError.write("[Control.selectableElement(below:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-        return parent?.selectableElement(below: self.index)
-    }
-    func selectableElement(above index: Int) -> Control? {
-        FileHandle.standardError.write("[Control.selectableElement(above:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-        return parent?.selectableElement(above: self.index)
-    }
-    func selectableElement(rightOf index: Int) -> Control? {
-        FileHandle.standardError.write("[Control.selectableElement(rightOf:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-        return parent?.selectableElement(rightOf: self.index)
-    }
-    func selectableElement(leftOf index: Int) -> Control? {
-        FileHandle.standardError.write("[Control.selectableElement(leftOf:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
-        return parent?.selectableElement(leftOf: self.index)
-    }
+    func selectableElement(below index: Int) -> Control? { parent?.selectableElement(below: self.index) }
+    func selectableElement(above index: Int) -> Control? { parent?.selectableElement(above: self.index) }
+    func selectableElement(rightOf index: Int) -> Control? { parent?.selectableElement(rightOf: self.index) }
+    func selectableElement(leftOf index: Int) -> Control? { parent?.selectableElement(leftOf: self.index) }
 
     // MARK: - Scrolling
 

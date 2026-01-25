@@ -70,12 +70,7 @@ public struct Button<Label: View>: View, PrimitiveView {
         
         var isHighlighted = false {
             didSet {
-                FileHandle.standardError.write("[ButtonControl.isHighlighted] self=\(ObjectIdentifier(self)) oldValue=\(oldValue) newValue=\(isHighlighted)\n".data(using: .utf8)!)
-                guard isHighlighted != oldValue else {
-                    FileHandle.standardError.write("[ButtonControl.isHighlighted] No change, returning\n".data(using: .utf8)!)
-                    return
-                }
-                FileHandle.standardError.write("[ButtonControl.isHighlighted] buttonLayer=\(buttonLayer.map { String(describing: ObjectIdentifier($0)) } ?? "nil"), calling invalidate\n".data(using: .utf8)!)
+                guard isHighlighted != oldValue else { return }
                 buttonLayer?.highlighted = isHighlighted
                 selectedBinding?.wrappedValue = isHighlighted
                 layer.invalidate()
@@ -114,14 +109,12 @@ public struct Button<Label: View>: View, PrimitiveView {
         override var selectable: Bool { true }
 
         override func becomeFirstResponder() {
-            FileHandle.standardError.write("[ButtonControl.becomeFirstResponder] self=\(ObjectIdentifier(self))\n".data(using: .utf8)!)
             super.becomeFirstResponder()
             isHighlighted = true
             hover()
         }
 
         override func resignFirstResponder() {
-            FileHandle.standardError.write("[ButtonControl.resignFirstResponder] self=\(ObjectIdentifier(self))\n".data(using: .utf8)!)
             super.resignFirstResponder()
             isHighlighted = false
         }
