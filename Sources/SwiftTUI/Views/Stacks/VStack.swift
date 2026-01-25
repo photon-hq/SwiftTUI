@@ -62,19 +62,23 @@ public struct VStack<Content: View>: View, PrimitiveView, LayoutRootView {
         override func size(proposedSize: Size) -> Size {
             var size: Size = .zero
             var remainingItems = children.count
+            
             // Calculate total spacing needed
             let totalSpacing = remainingItems > 1 ? spacing * Extended(remainingItems - 1) : 0
-            // Subtract spacing from available height before distributing
-            var availableHeight = proposedSize.height - totalSpacing
             
             for control in children.sorted(by: { $0.verticalFlexibility(width: proposedSize.width) < $1.verticalFlexibility(width: proposedSize.width) }) {
-                let heightPerItem = availableHeight / Extended(remainingItems)
+                // For size calculation, give each child a fair share of remaining height
+                // When proposedSize.height is 0, this gives 0 to each child which is fine
+                let usedHeight = size.height
+                let remainingHeight = proposedSize.height > usedHeight ? proposedSize.height - usedHeight - totalSpacing : 0
+                let heightPerItem = remainingItems > 0 ? remainingHeight / Extended(remainingItems) : 0
+                
                 let childSize = control.size(proposedSize: Size(width: proposedSize.width, height: heightPerItem))
                 size.height += childSize.height
                 size.width = max(size.width, childSize.width)
-                availableHeight -= childSize.height
                 remainingItems -= 1
             }
+            
             // Add total spacing to final height
             size.height += totalSpacing
             return size
@@ -83,18 +87,21 @@ public struct VStack<Content: View>: View, PrimitiveView, LayoutRootView {
         override func layout(size: Size) {
             super.layout(size: size)
             var remainingItems = children.count
+            
             // Calculate total spacing needed
             let totalSpacing = remainingItems > 1 ? spacing * Extended(remainingItems - 1) : 0
-            // Subtract spacing from available height before distributing
-            var remainingHeight = size.height - totalSpacing
+            
+            // Available height for content (excluding spacing)
+            var remainingHeight = size.height > totalSpacing ? size.height - totalSpacing : 0
             
             for control in children.sorted(by: { $0.verticalFlexibility(width: size.width) < $1.verticalFlexibility(width: size.width) }) {
-                let heightPerItem = remainingHeight / Extended(remainingItems)
+                let heightPerItem = remainingItems > 0 ? remainingHeight / Extended(remainingItems) : 0
                 let childSize = control.size(proposedSize: Size(width: size.width, height: heightPerItem))
                 control.layout(size: childSize)
-                remainingHeight -= childSize.height
+                remainingHeight = remainingHeight > childSize.height ? remainingHeight - childSize.height : 0
                 remainingItems -= 1
             }
+            
             var line: Extended = 0
             for control in children {
                 control.layer.frame.position.line = line
