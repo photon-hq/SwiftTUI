@@ -23,6 +23,7 @@ Many features from SwiftUI are already working:
 ✓ `Text` with bold, italic, underscore and strikethrough variants<br>
 ✓ `.onAppear()`, `.border()`, `.foregroundColor()`, `.backgroundColor`<br>
 ✓ `.buttonHighlightStyle()` for customizing button focus appearance<br>
+✓ `.onKeyPress()` for detecting keyboard input<br>
 ✓ Modifiers applied to all views in a collection like in SwiftUI
 
 ### Getting started
@@ -48,6 +49,49 @@ swift run
 ```
 
 For more, and to see the supported functionality, check out the [documentation](https://rensbreur.github.io/SwiftTUI/documentation/swifttui/).
+
+### Keyboard Input
+
+SwiftTUI provides the `.onKeyPress()` modifier to detect keyboard input outside of text fields.
+
+#### Detect a Specific Key
+
+```swift
+VStack {
+    Text("Press 'q' to quit")
+    Button("Click Me") { }
+}
+.onKeyPress("q") {
+    print("Q was pressed!")
+    exit(0)
+}
+```
+
+#### Detect Any Key
+
+```swift
+VStack {
+    Text("Press any key")
+}
+.onKeyPress { char in
+    print("Key pressed: \(char)")
+    return true  // Return true if handled, false to propagate
+}
+```
+
+#### Multiple Key Handlers
+
+```swift
+VStack {
+    Text("Press 'q' to quit, 'r' to refresh")
+}
+.onKeyPress("q") {
+    exit(0)
+}
+.onKeyPress("r") {
+    refresh()
+}
+```
 
 ### Button Highlight Styles
 
