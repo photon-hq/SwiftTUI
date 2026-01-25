@@ -4,9 +4,25 @@ import Foundation
 /// such as buttons to scroll to.
 public struct ScrollView<Content: View>: View, PrimitiveView {
     let content: VStack<Content>
+    let spacing: Extended?
 
-    public init(@ViewBuilder _ content: () -> Content) {
-        self.content = VStack(content: content())
+    /// Creates a scroll view with the specified spacing between elements.
+    ///
+    /// - Parameters:
+    ///   - spacing: The spacing between child elements. If `nil`, a default spacing of 0 is used.
+    ///   - content: A view builder that creates the content of the scroll view.
+    ///
+    /// Example:
+    /// ```swift
+    /// ScrollView(spacing: 1) {
+    ///     ForEach(items) { item in
+    ///         Text(item.name)
+    ///     }
+    /// }
+    /// ```
+    public init(spacing: Extended? = nil, @ViewBuilder _ content: () -> Content) {
+        self.spacing = spacing
+        self.content = VStack(content: content(), spacing: spacing)
     }
 
     static var size: Int? { 1 }
