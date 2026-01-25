@@ -1,18 +1,5 @@
 import Foundation
 
-// MARK: - Key Press Handler Environment Key
-
-private struct KeyPressHandlerKey: EnvironmentKey {
-    static var defaultValue: ((Character) -> Bool)? = nil
-}
-
-extension EnvironmentValues {
-    var keyPressHandler: ((Character) -> Bool)? {
-        get { self[KeyPressHandlerKey.self] }
-        set { self[KeyPressHandlerKey.self] = newValue }
-    }
-}
-
 // MARK: - View Extension
 
 public extension View {
@@ -36,7 +23,13 @@ public extension View {
     ///   - action: The action to perform when the key is pressed
     /// - Returns: A view that triggers the action when the specified key is pressed
     func onKeyPress(_ key: Character, action: @escaping () -> Void) -> some View {
-        OnKeyPressView(content: self, key: key, action: action)
+        OnKeyPress(content: self, handler: { char in
+            if char == key {
+                action()
+                return true
+            }
+            return false
+        })
     }
     
     /// Adds an action to perform when any key is pressed.
@@ -59,81 +52,54 @@ public extension View {
     ///   Return `true` if the key was handled, `false` to allow propagation.
     /// - Returns: A view that triggers the action when any key is pressed
     func onKeyPress(action: @escaping (Character) -> Bool) -> some View {
-        OnKeyPressAnyView(content: self, action: action)
+        OnKeyPress(content: self, handler: action)
     }
 }
 
-// MARK: - OnKeyPress View (Specific Key)
+// MARK: - OnKeyPress View
 
-struct OnKeyPressView<Content: View>: View, PrimitiveView {
+private struct OnKeyPress<Content: View>: View, PrimitiveView, ModifierView {
     let content: Content
-    let key: Character
-    let action: () -> Void
+    let handler: (Character) -> Bool
     
-    static var size: Int? { 1 }
+    static var size: Int? { Content.size }
     
     func buildNode(_ node: Node) {
-        node.addNode(at: 0, Node(view: content))
-        node.control = OnKeyPressControl(
-            content: node.children[0].control(at: 0),
-            handler: { char in
-                if char == self.key {
-                    self.action()
-                    return true
-                }
-                return false
-            }
-        )
+        node.addNode(at: 0, Node(view: content.view))
     }
     
     func updateNode(_ node: Node) {
         node.view = self
-        node.children[0].update(using: content)
-    }
-}
-
-// MARK: - OnKeyPress View (Any Key)
-
-struct OnKeyPressAnyView<Content: View>: View, PrimitiveView {
-    let content: Content
-    let action: (Character) -> Bool
-    
-    static var size: Int? { 1 }
-    
-    func buildNode(_ node: Node) {
-        node.addNode(at: 0, Node(view: content))
-        node.control = OnKeyPressControl(
-            content: node.children[0].control(at: 0),
-            handler: action
-        )
+        node.children[0].update(using: content.view)
     }
     
-    func updateNode(_ node: Node) {
-        node.view = self
-        node.children[0].update(using: content)
+    func passControl(_ control: Control, node: Node) -> Control {
+        if let onKeyPressControl = control.parent as? OnKeyPressControl {
+            onKeyPressControl.handler = handler
+            return onKeyPressControl
+        }
+        let onKeyPressControl = OnKeyPressControl(handler: handler)
+        onKeyPressControl.addSubview(control, at: 0)
+        return onKeyPressControl
     }
 }
 
 // MARK: - OnKeyPress Control
 
 private class OnKeyPressControl: Control {
-    var contentControl: Control
     var handler: (Character) -> Bool
     
-    init(content: Control, handler: @escaping (Character) -> Bool) {
-        self.contentControl = content
+    init(handler: @escaping (Character) -> Bool) {
         self.handler = handler
-        super.init()
-        addSubview(content, at: 0)
     }
     
     override func size(proposedSize: Size) -> Size {
-        contentControl.size(proposedSize: proposedSize)
+        children[0].size(proposedSize: proposedSize)
     }
     
     override func layout(size: Size) {
         super.layout(size: size)
-        contentControl.layout(size: size)
+        children[0].layout(size: size)
     }
     
     override func handleEvent(_ char: Character) {
