@@ -39,10 +39,6 @@ public struct Button<Label: View>: View, PrimitiveView {
         control.label = node.children[0].control(at: 0)
         control.addSubview(control.label, at: 0)
         node.control = control
-        
-        #if DEBUG
-        print("[Button.buildNode] binding=\(selected == nil ? "nil" : "set")")
-        #endif
     }
 
     func updateNode(_ node: Node) {
@@ -57,10 +53,6 @@ public struct Button<Label: View>: View, PrimitiveView {
             control.buttonLayer?.highlightStyle = highlightStyle
             control.selectedBinding = selected
             control.syncSelectedBinding()
-            
-            #if DEBUG
-            print("[Button.updateNode] isHighlighted=\(control.isHighlighted), binding=\(selected == nil ? "nil" : "set")")
-            #endif
         }
     }
 
@@ -72,9 +64,6 @@ public struct Button<Label: View>: View, PrimitiveView {
         var highlightStyle: ButtonHighlightStyle
         var selectedBinding: Binding<Bool>? {
             didSet {
-                #if DEBUG
-                print("[ButtonControl] selectedBinding didSet, now \(selectedBinding == nil ? "nil" : "set")")
-                #endif
                 syncSelectedBinding()
             }
         }
@@ -82,20 +71,8 @@ public struct Button<Label: View>: View, PrimitiveView {
         var isHighlighted = false {
             didSet {
                 guard isHighlighted != oldValue else { return }
-                #if DEBUG
-                print("[ButtonControl] isHighlighted changed to \(isHighlighted)")
-                #endif
                 buttonLayer?.highlighted = isHighlighted
-                if let binding = selectedBinding {
-                    #if DEBUG
-                    print("[ButtonControl] Setting binding.wrappedValue to \(isHighlighted)")
-                    #endif
-                    binding.wrappedValue = isHighlighted
-                } else {
-                    #if DEBUG
-                    print("[ButtonControl] No binding to update!")
-                    #endif
-                }
+                selectedBinding?.wrappedValue = isHighlighted
                 layer.invalidate()
             }
         }
@@ -105,9 +82,6 @@ public struct Button<Label: View>: View, PrimitiveView {
             self.hover = hover
             self.highlightStyle = highlightStyle
             self.selectedBinding = selectedBinding
-            #if DEBUG
-            print("[ButtonControl.init] binding=\(selectedBinding == nil ? "nil" : "set")")
-            #endif
         }
 
         override func size(proposedSize: Size) -> Size {
@@ -121,13 +95,7 @@ public struct Button<Label: View>: View, PrimitiveView {
 
         func syncSelectedBinding() {
             let isCurrentlyHighlighted = isHighlighted
-            #if DEBUG
-            print("[ButtonControl.syncSelectedBinding] isHighlighted=\(isCurrentlyHighlighted), binding=\(selectedBinding == nil ? "nil" : "set")")
-            #endif
             if let binding = selectedBinding, binding.wrappedValue != isCurrentlyHighlighted {
-                #if DEBUG
-                print("[ButtonControl.syncSelectedBinding] Updating binding to \(isCurrentlyHighlighted)")
-                #endif
                 binding.wrappedValue = isCurrentlyHighlighted
             }
         }
@@ -142,18 +110,12 @@ public struct Button<Label: View>: View, PrimitiveView {
 
         override func becomeFirstResponder() {
             super.becomeFirstResponder()
-            #if DEBUG
-            print("[ButtonControl.becomeFirstResponder] Called")
-            #endif
             isHighlighted = true
             hover()
         }
 
         override func resignFirstResponder() {
             super.resignFirstResponder()
-            #if DEBUG
-            print("[ButtonControl.resignFirstResponder] Called")
-            #endif
             isHighlighted = false
         }
 

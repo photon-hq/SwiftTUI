@@ -23,6 +23,7 @@ public class Application {
 
     private var invalidatedNodes: [Node] = []
     private var updateScheduled = false
+    private var isUpdating = false
 
     /// Called when the user presses Ctrl+C.
     /// Return `.quit` to exit the application, or `.none` to ignore the interrupt.
@@ -165,46 +166,42 @@ public class Application {
     }
 
     func invalidateNode(_ node: Node) {
-        #if DEBUG
-        print("[Application.invalidateNode] node=\(ObjectIdentifier(node))")
-        #endif
         invalidatedNodes.append(node)
         scheduleUpdate()
     }
 
     func scheduleUpdate() {
+        // If we're currently in the middle of an update, schedule another one
+        // because nodes invalidated during update need to be processed
+        if isUpdating {
+            updateScheduled = true
+            return
+        }
+        
         if !updateScheduled {
-            #if DEBUG
-            print("[Application.scheduleUpdate] Scheduling async update")
-            #endif
             DispatchQueue.main.async { self.update() }
             updateScheduled = true
-        } else {
-            #if DEBUG
-            print("[Application.scheduleUpdate] Update already scheduled")
-            #endif
         }
     }
 
     private func update() {
-        #if DEBUG
-        print("[Application.update] Running update, \(invalidatedNodes.count) nodes to update")
-        #endif
         updateScheduled = false
+        isUpdating = true
 
-        for node in invalidatedNodes {
-            #if DEBUG
-            print("[Application.update] Updating node \(ObjectIdentifier(node))")
-            #endif
-            node.update(using: node.view)
+        // Process all invalidated nodes, including any that get added during the update
+        while !invalidatedNodes.isEmpty {
+            let nodesToUpdate = invalidatedNodes
+            invalidatedNodes = []
+            
+            for node in nodesToUpdate {
+                node.update(using: node.view)
+            }
         }
-        invalidatedNodes = []
+
+        isUpdating = false
 
         control.layout(size: window.layer.frame.size)
         renderer.update()
-        #if DEBUG
-        print("[Application.update] Update complete")
-        #endif
     }
 
     private func handleWindowSizeChange() {
