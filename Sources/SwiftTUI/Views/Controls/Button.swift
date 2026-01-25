@@ -74,6 +74,10 @@ public struct Button<Label: View>: View, PrimitiveView {
         var highlightStyle: ButtonHighlightStyle
         var selectedBinding: Binding<Bool>?
         private var hasSyncedInitialState = false
+        
+        // Track highlighted state directly since becomeFirstResponder is called
+        // before the binding is set up in some cases
+        private var isHighlighted = false
 
         init(action: @escaping () -> Void, hover: @escaping () -> Void, highlightStyle: ButtonHighlightStyle, selectedBinding: Binding<Bool>?) {
             self.action = action
@@ -101,18 +105,12 @@ public struct Button<Label: View>: View, PrimitiveView {
         }
 
         func syncSelectedBinding() {
-            // Check if this button is currently the first responder
-            let isCurrentlyFirstResponder = isFirstResponder
-            
-            // Update highlighted state to match
-            if buttonLayer?.highlighted != isCurrentlyFirstResponder {
-                buttonLayer?.highlighted = isCurrentlyFirstResponder
-                layer.invalidate()
-            }
+            // Use our tracked highlighted state which is set by becomeFirstResponder
+            let isCurrentlyHighlighted = isHighlighted
             
             // Update binding to match
-            if let binding = selectedBinding, binding.wrappedValue != isCurrentlyFirstResponder {
-                binding.wrappedValue = isCurrentlyFirstResponder
+            if let binding = selectedBinding, binding.wrappedValue != isCurrentlyHighlighted {
+                binding.wrappedValue = isCurrentlyHighlighted
             }
         }
 
@@ -126,6 +124,7 @@ public struct Button<Label: View>: View, PrimitiveView {
 
         override func becomeFirstResponder() {
             super.becomeFirstResponder()
+            isHighlighted = true
             buttonLayer?.highlighted = true
             selectedBinding?.wrappedValue = true
             hover()
@@ -134,6 +133,7 @@ public struct Button<Label: View>: View, PrimitiveView {
 
         override func resignFirstResponder() {
             super.resignFirstResponder()
+            isHighlighted = false
             buttonLayer?.highlighted = false
             selectedBinding?.wrappedValue = false
             layer.invalidate()
