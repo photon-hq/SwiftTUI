@@ -78,7 +78,11 @@ public struct Button<Label: View>: View, PrimitiveView {
         var label: Control!
         weak var buttonLayer: ButtonLayer?
         var highlightStyle: ButtonHighlightStyle
-        var selectedBinding: Binding<Bool>?
+        var selectedBinding: Binding<Bool>? {
+            didSet {
+                syncSelectedBinding()
+            }
+        }
         
         // Track highlighted state directly since becomeFirstResponder is called
         // before the binding is set up in some cases
