@@ -63,9 +63,6 @@ public struct Button<Label: View>: View, PrimitiveView {
             control.highlightStyle = highlightStyle
             control.buttonLayer?.highlightStyle = highlightStyle
             control.selectedBinding = selected
-            
-            // Sync the binding with current first responder state
-            control.syncSelectedBinding()
         }
     }
 
@@ -76,6 +73,7 @@ public struct Button<Label: View>: View, PrimitiveView {
         weak var buttonLayer: ButtonLayer?
         var highlightStyle: ButtonHighlightStyle
         var selectedBinding: Binding<Bool>?
+        private var hasSyncedInitialState = false
 
         init(action: @escaping () -> Void, hover: @escaping () -> Void, highlightStyle: ButtonHighlightStyle, selectedBinding: Binding<Bool>?) {
             self.action = action
@@ -92,11 +90,14 @@ public struct Button<Label: View>: View, PrimitiveView {
             super.layout(size: size)
             self.label.layout(size: size)
             
-            // Always sync on layout to catch all cases:
-            // - Initial app start
-            // - View switching via if/else
-            // - Any other scenario where this button becomes first responder
-            syncSelectedBinding()
+            // Sync initial state after first layout
+            // Use async to avoid modifying state during layout cycle
+            if !hasSyncedInitialState {
+                hasSyncedInitialState = true
+                DispatchQueue.main.async { [weak self] in
+                    self?.syncSelectedBinding()
+                }
+            }
         }
 
         func syncSelectedBinding() {
@@ -106,6 +107,7 @@ public struct Button<Label: View>: View, PrimitiveView {
             // Update highlighted state to match
             if buttonLayer?.highlighted != isCurrentlyFirstResponder {
                 buttonLayer?.highlighted = isCurrentlyFirstResponder
+                layer.invalidate()
             }
             
             // Update binding to match
