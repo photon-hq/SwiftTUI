@@ -118,24 +118,32 @@ public struct VStack<Content: View>: View, PrimitiveView, LayoutRootView {
         // MARK: - Selection
         
         override func selectableElement(below index: Int) -> Control? {
+            FileHandle.standardError.write("[VStackControl.selectableElement(below:)] index=\(index) children.count=\(children.count)\n".data(using: .utf8)!)
             var index = index + 1
             while index < children.count {
+                FileHandle.standardError.write("[VStackControl.selectableElement(below:)] checking children[\(index)]\n".data(using: .utf8)!)
                 if let element = children[index].firstSelectableElement {
+                    FileHandle.standardError.write("[VStackControl.selectableElement(below:)] found element: \(type(of: element))\n".data(using: .utf8)!)
                     return element
                 }
                 index += 1
             }
+            FileHandle.standardError.write("[VStackControl.selectableElement(below:)] no element found, calling super\n".data(using: .utf8)!)
             return super.selectableElement(below: index)
         }
         
         override func selectableElement(above index: Int) -> Control? {
+            FileHandle.standardError.write("[VStackControl.selectableElement(above:)] index=\(index) children.count=\(children.count)\n".data(using: .utf8)!)
             var index = index - 1
             while index >= 0 {
+                FileHandle.standardError.write("[VStackControl.selectableElement(above:)] checking children[\(index)]\n".data(using: .utf8)!)
                 if let element = children[index].firstSelectableElement {
+                    FileHandle.standardError.write("[VStackControl.selectableElement(above:)] found element: \(type(of: element))\n".data(using: .utf8)!)
                     return element
                 }
                 index -= 1
             }
+            FileHandle.standardError.write("[VStackControl.selectableElement(above:)] no element found, calling super\n".data(using: .utf8)!)
             return super.selectableElement(above: index)
         }
     }

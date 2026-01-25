@@ -116,26 +116,35 @@ public class Application {
             if arrowKeyParser.parse(character: char) {
                 guard let key = arrowKeyParser.arrowKey else { continue }
                 arrowKeyParser.arrowKey = nil
+                FileHandle.standardError.write("[Application.handleInput] Arrow key: \(key), firstResponder: \(window.firstResponder.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
                 if key == .down {
-                    if let next = window.firstResponder?.selectableElement(below: 0) {
+                    let next = window.firstResponder?.selectableElement(below: 0)
+                    FileHandle.standardError.write("[Application.handleInput] down: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+                    if let next = next {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()
                     }
                 } else if key == .up {
-                    if let next = window.firstResponder?.selectableElement(above: 0) {
+                    let next = window.firstResponder?.selectableElement(above: 0)
+                    FileHandle.standardError.write("[Application.handleInput] up: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+                    if let next = next {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()
                     }
                 } else if key == .right {
-                    if let next = window.firstResponder?.selectableElement(rightOf: 0) {
+                    let next = window.firstResponder?.selectableElement(rightOf: 0)
+                    FileHandle.standardError.write("[Application.handleInput] right: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+                    if let next = next {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()
                     }
                 } else if key == .left {
-                    if let next = window.firstResponder?.selectableElement(leftOf: 0) {
+                    let next = window.firstResponder?.selectableElement(leftOf: 0)
+                    FileHandle.standardError.write("[Application.handleInput] left: next=\(next.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+                    if let next = next {
                         window.firstResponder?.resignFirstResponder()
                         window.firstResponder = next
                         window.firstResponder?.becomeFirstResponder()

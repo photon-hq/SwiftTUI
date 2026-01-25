@@ -129,10 +129,22 @@ class Control: LayerDrawing {
         return nil
     }
 
-    func selectableElement(below index: Int) -> Control? { parent?.selectableElement(below: self.index) }
-    func selectableElement(above index: Int) -> Control? { parent?.selectableElement(above: self.index) }
-    func selectableElement(rightOf index: Int) -> Control? { parent?.selectableElement(rightOf: self.index) }
-    func selectableElement(leftOf index: Int) -> Control? { parent?.selectableElement(leftOf: self.index) }
+    func selectableElement(below index: Int) -> Control? {
+        FileHandle.standardError.write("[Control.selectableElement(below:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+        return parent?.selectableElement(below: self.index)
+    }
+    func selectableElement(above index: Int) -> Control? {
+        FileHandle.standardError.write("[Control.selectableElement(above:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+        return parent?.selectableElement(above: self.index)
+    }
+    func selectableElement(rightOf index: Int) -> Control? {
+        FileHandle.standardError.write("[Control.selectableElement(rightOf:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+        return parent?.selectableElement(rightOf: self.index)
+    }
+    func selectableElement(leftOf index: Int) -> Control? {
+        FileHandle.standardError.write("[Control.selectableElement(leftOf:)] self=\(type(of: self)) self.index=\(self.index) parent=\(parent.map { String(describing: type(of: $0)) } ?? "nil")\n".data(using: .utf8)!)
+        return parent?.selectableElement(leftOf: self.index)
+    }
 
     // MARK: - Scrolling
 
