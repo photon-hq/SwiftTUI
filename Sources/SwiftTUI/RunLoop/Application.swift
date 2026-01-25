@@ -183,6 +183,7 @@ public class Application {
     }
 
     func scheduleUpdate() {
+        FileHandle.standardError.write("[Application.scheduleUpdate] isUpdating=\(isUpdating) updateScheduled=\(updateScheduled)\n".data(using: .utf8)!)
         // If we're currently in the middle of an update, schedule another one
         // because nodes invalidated during update need to be processed
         if isUpdating {
@@ -191,12 +192,14 @@ public class Application {
         }
         
         if !updateScheduled {
+            FileHandle.standardError.write("[Application.scheduleUpdate] Scheduling async update\n".data(using: .utf8)!)
             DispatchQueue.main.async { self.update() }
             updateScheduled = true
         }
     }
 
     private func update() {
+        FileHandle.standardError.write("[Application.update] Starting update, invalidatedNodes.count=\(invalidatedNodes.count)\n".data(using: .utf8)!)
         updateScheduled = false
         isUpdating = true
 
@@ -213,6 +216,7 @@ public class Application {
         isUpdating = false
 
         control.layout(size: window.layer.frame.size)
+        FileHandle.standardError.write("[Application.update] Calling renderer.update()\n".data(using: .utf8)!)
         renderer.update()
     }
 
