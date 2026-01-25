@@ -33,11 +33,26 @@ public struct State<T>: AnyState {
             guard let node = valueReference.node,
                   let label = valueReference.label
             else {
+                #if DEBUG
+                print("[State.set] FAILED - node or label is nil!")
+                #endif
                 assertionFailure("Attempting to modify @State variable before view is instantiated")
                 return
             }
+            #if DEBUG
+            print("[State.set] Setting \(label) to \(newValue), node=\(ObjectIdentifier(node))")
+            #endif
             node.state[label] = newValue
-            node.root.application?.invalidateNode(node)
+            if let app = node.root.application {
+                #if DEBUG
+                print("[State.set] Calling invalidateNode")
+                #endif
+                app.invalidateNode(node)
+            } else {
+                #if DEBUG
+                print("[State.set] FAILED - application is nil!")
+                #endif
+            }
         }
     }
 

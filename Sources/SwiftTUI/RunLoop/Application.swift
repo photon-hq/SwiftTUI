@@ -165,27 +165,46 @@ public class Application {
     }
 
     func invalidateNode(_ node: Node) {
+        #if DEBUG
+        print("[Application.invalidateNode] node=\(ObjectIdentifier(node))")
+        #endif
         invalidatedNodes.append(node)
         scheduleUpdate()
     }
 
     func scheduleUpdate() {
         if !updateScheduled {
+            #if DEBUG
+            print("[Application.scheduleUpdate] Scheduling async update")
+            #endif
             DispatchQueue.main.async { self.update() }
             updateScheduled = true
+        } else {
+            #if DEBUG
+            print("[Application.scheduleUpdate] Update already scheduled")
+            #endif
         }
     }
 
     private func update() {
+        #if DEBUG
+        print("[Application.update] Running update, \(invalidatedNodes.count) nodes to update")
+        #endif
         updateScheduled = false
 
         for node in invalidatedNodes {
+            #if DEBUG
+            print("[Application.update] Updating node \(ObjectIdentifier(node))")
+            #endif
             node.update(using: node.view)
         }
         invalidatedNodes = []
 
         control.layout(size: window.layer.frame.size)
         renderer.update()
+        #if DEBUG
+        print("[Application.update] Update complete")
+        #endif
     }
 
     private func handleWindowSizeChange() {
