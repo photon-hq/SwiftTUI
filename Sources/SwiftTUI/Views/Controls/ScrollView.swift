@@ -46,8 +46,9 @@ public struct ScrollView<Content: View>: View, PrimitiveView {
 
         override func layout(size: Size) {
             super.layout(size: size)
-            // Use infinite height to let content expand fully, but use actual width
-            let contentSize = contentControl.size(proposedSize: Size(width: size.width, height: .infinity))
+            // First get the natural content size with the actual width constraint
+            // Use a very large height instead of infinity to avoid division issues
+            let contentSize = contentControl.size(proposedSize: Size(width: size.width, height: 10000))
             contentControl.layout(size: contentSize)
             contentControl.layer.frame.position.line = -contentOffset
         }
