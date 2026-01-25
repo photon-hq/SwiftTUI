@@ -40,15 +40,16 @@ public class Application {
         window = Window()
         window.addControl(control)
 
-        node.application = self
-
-        window.firstResponder = control.firstSelectableElement
-        window.firstResponder?.becomeFirstResponder()
-
         renderer = Renderer(layer: window.layer)
         window.layer.renderer = renderer
 
+        // Set application references AFTER all stored properties are initialized
+        node.application = self
         renderer.application = self
+
+        // Now set up first responder - application context is available
+        window.firstResponder = control.firstSelectableElement
+        window.firstResponder?.becomeFirstResponder()
     }
 
     var stdInSource: DispatchSourceRead?
