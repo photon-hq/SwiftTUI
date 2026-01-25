@@ -86,7 +86,14 @@ public struct Button<Label: View>: View, PrimitiveView {
         
         // Track highlighted state directly since becomeFirstResponder is called
         // before the binding is set up in some cases
-        var isHighlighted = false
+        var isHighlighted = false {
+            didSet {
+                guard isHighlighted != oldValue else { return }
+                buttonLayer?.highlighted = isHighlighted
+                selectedBinding?.wrappedValue = isHighlighted
+                layer.invalidate()
+            }
+        }
 
         init(action: @escaping () -> Void, hover: @escaping () -> Void, highlightStyle: ButtonHighlightStyle, selectedBinding: Binding<Bool>?) {
             self.action = action
@@ -125,22 +132,17 @@ public struct Button<Label: View>: View, PrimitiveView {
         override func becomeFirstResponder() {
             super.becomeFirstResponder()
             isHighlighted = true
-            buttonLayer?.highlighted = true
-            selectedBinding?.wrappedValue = true
             hover()
-            layer.invalidate()
         }
 
         override func resignFirstResponder() {
             super.resignFirstResponder()
             isHighlighted = false
-            buttonLayer?.highlighted = false
-            selectedBinding?.wrappedValue = false
-            layer.invalidate()
         }
 
         override func makeLayer() -> Layer {
             let layer = ButtonLayer(highlightStyle: highlightStyle)
+            layer.highlighted = isHighlighted
             self.buttonLayer = layer
             return layer
         }
